@@ -454,3 +454,4 @@ powershell -ExecutionPolicy Bypass -File tools\convert_photos.ps1 -Src res\photo
 - 双闪/转向灯音效
 - U 盘导入音乐/图片
 
+[be-better66/Linux_pro: 学习Linux开发](https://github.com/be-better66/Linux_pro)
