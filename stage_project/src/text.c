@@ -1,7 +1,9 @@
 #include "text.h"
 #include "lcd.h"
 #include "truetype.h"
+#include "log.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,13 +55,13 @@ int text_init(const char *ttf_path)
 
     fd = open(ttf_path, O_RDONLY);
     if (fd < 0) {
-        perror("[text] open font");
+        log_error("[text] open font: %s", strerror(errno));
         return -1;
     }
 
     size = lseek(fd, 0, SEEK_END);
     if (size <= 0) {
-        fprintf(stderr, "[text] font file is empty\n");
+        log_error("[text] font file is empty");
         close(fd);
         return -1;
     }
@@ -67,7 +69,7 @@ int text_init(const char *ttf_path)
 
     g_ttf = (unsigned char *)malloc((size_t)size);
     if (g_ttf == NULL) {
-        fprintf(stderr, "[text] out of memory for font\n");
+        log_error("[text] out of memory for font");
         close(fd);
         return -1;
     }
@@ -75,14 +77,14 @@ int text_init(const char *ttf_path)
     got = read(fd, g_ttf, (size_t)size);
     close(fd);
     if (got != (ssize_t)size) {
-        fprintf(stderr, "[text] read font failed\n");
+        log_error("[text] read font failed");
         free(g_ttf);
         g_ttf = NULL;
         return -1;
     }
 
     if (stbtt_InitFont(&g_info, g_ttf, 0) <= 0) {
-        fprintf(stderr, "[text] stbtt_InitFont failed\n");
+        log_error("[text] stbtt_InitFont failed");
         free(g_ttf);
         g_ttf = NULL;
         return -1;
@@ -90,7 +92,7 @@ int text_init(const char *ttf_path)
 
     g_loaded = 1;
     g_px = 0;
-    printf("[text] font loaded: %s (%ld bytes)\n", ttf_path, (long)size);
+    log_info("[text] font loaded: %s (%ld bytes)", ttf_path, (long)size);
     return 0;
 }
 

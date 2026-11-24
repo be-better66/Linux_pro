@@ -30,9 +30,12 @@ set_source_files_properties(${TRUETYPE_SRC} PROPERTIES COMPILE_OPTIONS "-w")
 
 # 和参考工程一样：src 下所有 .c 直接编译成一个可执行文件
 file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
+list(APPEND SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/log/log.c)
 
 add_executable(carmode ${SOURCES})
-target_include_directories(carmode PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+target_include_directories(carmode PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/log)
 target_link_libraries(carmode PRIVATE m pthread)
 
 set_target_properties(carmode PROPERTIES

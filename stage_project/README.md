@@ -2,7 +2,7 @@
 
 > Linux 阶段性小项目：framebuffer 显示 + 触摸 + BMP 解码 + 中文 TTF + CMake / Makefile
 
-本工程按 `inc/ + src/ + res/` 的结构组织，做成了一个 **车载中控屏** 的阶段性项目：
+本工程按 `inc/ + src/ + log/ + res/` 的结构组织，做成了一个 **车载中控屏** 的阶段性项目：
 
 - 主页六宫格：导航 / 仪表 / 音乐 / 电话 / 相册 / 设置
 - 仪表盘：车速表 + 转速表 + 指针动画 + 数字车速 + 挡位 + 转向灯
@@ -87,6 +87,8 @@ stage_project/
 │   ├── music/                 # 1.mp3 2.mp3 3.mp3
 │   ├── photo/                 # photo_N.bmp 全图 + thumb_N.bmp 缩略图
 │   └── font/simfang.ttf
+├── log/                       # rxi/log 日志库（log.c、log.h）
+├── logs/                      # 运行日志（运行时生成，已 gitignore）
 ├── lib/                       # 第三方库目录（当前为空，见 README）
 ├── tools/                     # 素材转换/检查脚本
 └── docs/
@@ -146,7 +148,7 @@ make STATIC=1        # 静态链接
 make clean
 ```
 
-> 所有 `src/*.c` 直接编译进 `carmode`，没有额外的库步骤，和参考工程的
+> 所有 `src/*.c` 和 `log/log.c` 直接编译进 `carmode`，没有额外的库步骤，和参考工程的
 > `arm-linux-gcc ./src/*.c -o project -I ./inc` 思路一致。
 
 > 如果工程在 VMware 共享目录（`/mnt/hgfs/...`），`make pack` 会先把内容复制到
@@ -238,6 +240,22 @@ song=夜空中最亮的星|逃跑计划|res/music/1.mp3|3
 
 > 主题、亮度、音量在界面上的修改只在本次运行有效；要永久生效，直接改 `car.cfg`。
 
+### 7.1 日志
+
+日志使用 `log/log.c`（rxi/log），已接入 CMake 和 Makefile。
+
+- 运行日志：`logs/carmode.log`，在包含 `res/` 的运行目录下生成；
+- 运行目录不可写时退回 `/tmp/carmode.log`；
+- 终端和文件同时输出，格式为 `时间 级别 文件:行号 内容`；
+- 默认级别 `LOG_DEBUG`，触摸调试也在其中；
+- 实时查看：
+
+```bash
+tail -f logs/carmode.log
+```
+
+`logs/` 已加入 `.gitignore`，不会提交运行日志。
+
 ## 8. 素材：放哪里、多大
 
 快速版：
@@ -315,7 +333,7 @@ powershell -ExecutionPolicy Bypass -File tools\check_bmp.ps1 -Dir res\car -Any
 
 | 项目 | 结果 |
 | --- | --- |
-| 5 个驱动 .c + 7 个车载 .c（共 12 个）`-Wall -Wextra -fsyntax-only` | 全部通过 |
+| 5 个驱动 .c + 7 个车载 .c（共 12 个）+ `log/log.c` `-Wall -Wextra -fsyntax-only` | 全部通过 |
 | BMP 解码 | 24/32 位、行填充、上下翻转、居中、缺图，单元测试通过 |
 | 配置解析 | 主题/音量/温度/歌曲/UTF-8，单元测试通过（并修复了默认歌曲字符串被改写导致的崩溃） |
 | LCD 绘图 | 越界裁剪、stride、混合、snapshot，单元测试通过 |
@@ -454,4 +472,4 @@ powershell -ExecutionPolicy Bypass -File tools\convert_photos.ps1 -Src res\photo
 - 双闪/转向灯音效
 - U 盘导入音乐/图片
 
-[be-better66/Linux_pro: 学习Linux开发](https://github.com/be-better66/Linux_pro)
+GitHub仓库链接：https://github.com/be-better66/Linux_pro.git

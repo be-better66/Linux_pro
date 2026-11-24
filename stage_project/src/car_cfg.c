@@ -1,5 +1,7 @@
 #include "car.h"
+#include "log.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -126,7 +128,7 @@ int car_config_load(const char *path, car_config_t *cfg)
 
     fp = fopen(path, "r");
     if (fp == NULL) {
-        perror(path);
+        log_error("[cfg] %s: %s", path, strerror(errno));
         return -1;
     }
 
@@ -205,7 +207,7 @@ int car_config_load(const char *path, car_config_t *cfg)
     fclose(fp);
 
     if (cfg->song_count == 0) {
-        fprintf(stderr, "[car] no song in config, use default songs\n");
+        log_warn("[car] no song in config, use default songs");
         add_default_songs(cfg);
     }
 

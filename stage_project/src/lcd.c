@@ -1,5 +1,7 @@
 #include "lcd.h"
+#include "log.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
@@ -35,12 +37,12 @@ int lcd_init(void)
 
     g_fd = open("/dev/fb0", O_RDWR);
     if (g_fd < 0) {
-        perror("[lcd] open /dev/fb0");
+        log_error("[lcd] open /dev/fb0: %s", strerror(errno));
         return -1;
     }
 
     if (ioctl(g_fd, FBIOGET_VSCREENINFO, &vi) < 0) {
-        perror("[lcd] FBIOGET_VSCREENINFO");
+        log_error("[lcd] FBIOGET_VSCREENINFO: %s", strerror(errno));
         close(g_fd);
         g_fd = -1;
         return -1;
@@ -48,7 +50,7 @@ int lcd_init(void)
 
     memset(&fi, 0, sizeof(fi));
     if (ioctl(g_fd, FBIOGET_FSCREENINFO, &fi) < 0) {
-        perror("[lcd] FBIOGET_FSCREENINFO");
+        log_warn("[lcd] FBIOGET_FSCREENINFO: %s", strerror(errno));
         /* 拿不到 fixinfo 时按 800x480x4 处理 */
     }
 
@@ -57,14 +59,14 @@ int lcd_init(void)
     g_bpp = (int)vi.bits_per_pixel;
 
     if (g_w <= 0 || g_h <= 0) {
-        fprintf(stderr, "[lcd] invalid resolution %dx%d\n", g_w, g_h);
+        log_error("[lcd] invalid resolution %dx%d", g_w, g_h);
         close(g_fd);
         g_fd = -1;
         return -1;
     }
 
     if (g_bpp != 32) {
-        fprintf(stderr, "[lcd] unsupported bpp: %d (need 32)\n", g_bpp);
+        log_error("[lcd] unsupported bpp: %d (need 32)", g_bpp);
         close(g_fd);
         g_fd = -1;
         return -1;
@@ -82,7 +84,7 @@ int lcd_init(void)
     g_fb = (uint32_t *)mmap(NULL, g_map_size, PROT_READ | PROT_WRITE,
                            MAP_SHARED, g_fd, 0);
     if (g_fb == MAP_FAILED) {
-        perror("[lcd] mmap");
+        log_error("[lcd] mmap: %s", strerror(errno));
         g_fb = NULL;
         close(g_fd);
         g_fd = -1;
@@ -97,8 +99,8 @@ int lcd_init(void)
     vi.yoffset = 0;
     (void)ioctl(g_fd, FBIOPAN_DISPLAY, &vi);
 
-    printf("[lcd] %dx%d, %d bpp, stride=%d, map=%lu bytes\n",
-           g_w, g_h, g_bpp, g_stride, (unsigned long)g_map_size);
+    log_info("[lcd] %dx%d, %d bpp, stride=%d, map=%lu bytes",
+             g_w, g_h, g_bpp, g_stride, (unsigned long)g_map_size);
     return 0;
 }
 

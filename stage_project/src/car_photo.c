@@ -3,6 +3,7 @@
 
 #include "lcd.h"
 #include "text.h"
+#include "log.h"
 
 #include <dirent.h>
 #include <stdio.h>
@@ -72,7 +73,7 @@ static void scan_photos(void)
 
     dir = opendir(g_car.cfg.photo_dir);
     if (dir == NULL) {
-        printf("[photo] 打不开目录: %s\n", g_car.cfg.photo_dir);
+        log_warn("[photo] 打不开目录: %s", g_car.cfg.photo_dir);
         return;
     }
 
@@ -102,10 +103,10 @@ static void scan_photos(void)
         memset(&s_thumb[i], 0, sizeof(s_thumb[i]));
         s_thumb_ok[i] = (bmp_load(thumb, &s_thumb[i]) == 0);
         if (!s_thumb_ok[i])
-            printf("[photo] 缩略图缺失: %s\n", thumb);
+            log_warn("[photo] 缩略图缺失: %s", thumb);
     }
 
-    printf("[photo] 共 %d 张，目录 %s\n", s_count, g_car.cfg.photo_dir);
+    log_info("[photo] 共 %d 张，目录 %s", s_count, g_car.cfg.photo_dir);
 }
 
 static void load_full(int idx)
@@ -121,7 +122,7 @@ static void load_full(int idx)
     memset(&s_full, 0, sizeof(s_full));
     s_full_ok = (bmp_load(path, &s_full) == 0);
     if (!s_full_ok)
-        printf("[photo] 图片加载失败: %s\n", path);
+        log_error("[photo] 图片加载失败: %s", path);
 }
 
 static void open_photo(int idx)

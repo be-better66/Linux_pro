@@ -4,3 +4,4 @@ out/
 *.d
 *.a
 *.tar.gz
+logs/

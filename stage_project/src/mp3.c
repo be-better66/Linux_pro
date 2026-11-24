@@ -1,4 +1,5 @@
 #include "car.h"
+#include "log.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,9 +50,9 @@ void car_music_start(int index)
                  "madplay -a 18 '%s' >/dev/null 2>&1 &",
                  g_car.cfg.music[index]);
         system(cmd);
-        printf("[mp3] 播放: %s\n", g_car.cfg.music[index]);
+        log_info("[mp3] 播放: %s", g_car.cfg.music[index]);
     } else {
-        printf("[mp3] 模拟播放: %s\n", g_car.cfg.music[index]);
+        log_info("[mp3] 模拟播放: %s", g_car.cfg.music[index]);
     }
 
     if (g_car.page == CAR_PAGE_MUSIC)

@@ -17,10 +17,11 @@ CC            := $(CROSS_COMPILE)gcc
 BUILD_DIR := out
 SRC_DIR   := src
 INC_DIR   := inc
+LOG_DIR   := log
 TARGET    := carmode
 
 CFLAGS   ?= -Wall -Wextra -O2 -std=gnu99
-CPPFLAGS += -I$(INC_DIR)
+CPPFLAGS += -I$(INC_DIR) -I$(LOG_DIR)
 LDLIBS   += -lm -lpthread
 
 STATIC ?= 0
@@ -33,13 +34,14 @@ PACK_TMP    := /tmp/carmode_pkg
 
 SRCS := $(wildcard $(SRC_DIR)/*.c)
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/obj/%.o,$(SRCS))
+LOG_OBJ := $(BUILD_DIR)/obj/log.o
 BIN  := $(BUILD_DIR)/$(TARGET)
 
 .PHONY: all clean distclean pack deploy help
 
 all: $(BIN)
 
-$(BIN): $(OBJS)
+$(BIN): $(OBJS) $(LOG_OBJ)
 	@mkdir -p $(dir $@)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 	@echo "[OK] $(BIN)"
@@ -48,10 +50,14 @@ $(BUILD_DIR)/obj/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MP -c $< -o $@
 
+$(LOG_OBJ): $(LOG_DIR)/log.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MP -c $< -o $@
+
 # 第三方字库引擎关闭告警
 $(BUILD_DIR)/obj/truetype.o: CFLAGS += -w
 
--include $(OBJS:.o=.d)
+-include $(OBJS:.o=.d) $(LOG_OBJ:.o=.d)
 
 clean:
 	rm -rf $(BUILD_DIR)

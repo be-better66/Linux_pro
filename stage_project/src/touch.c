@@ -1,4 +1,5 @@
 #include "touch.h"
+#include "log.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -45,7 +46,7 @@ int touch_init(void)
 
     g_fd = open("/dev/input/event0", O_RDONLY | O_NONBLOCK);
     if (g_fd < 0) {
-        perror("[touch] open /dev/input/event0");
+        log_error("[touch] open /dev/input/event0: %s", strerror(errno));
         return -1;
     }
 
@@ -60,8 +61,8 @@ int touch_init(void)
         g_max_y = abs.maximum;
     }
 
-    printf("[touch] raw x:%d..%d  y:%d..%d -> 800x480\n",
-           g_min_x, g_max_x, g_min_y, g_max_y);
+    log_info("[touch] raw x:%d..%d  y:%d..%d -> 800x480",
+             g_min_x, g_max_x, g_min_y, g_max_y);
     return 0;
 }
 
@@ -169,7 +170,7 @@ int touch_wait(touch_event_t *ev, int timeout_ms)
     if (ret < 0) {
         if (errno == EINTR)
             return 0;
-        perror("[touch] select");
+        log_error("[touch] select: %s", strerror(errno));
         return -1;
     }
 
@@ -187,7 +188,7 @@ int touch_wait(touch_event_t *ev, int timeout_ms)
         } else if (n < 0) {
             if (errno == EINTR)
                 continue;
-            perror("[touch] read");
+            log_error("[touch] read: %s", strerror(errno));
             return -1;
         } else {
             return 0;

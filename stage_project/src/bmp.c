@@ -1,6 +1,8 @@
 #include "bmp.h"
 #include "lcd.h"
+#include "log.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,17 +36,17 @@ int bmp_load(const char *path, bmp_image_t *img)
 
     fp = fopen(path, "rb");
     if (fp == NULL) {
-        perror(path);
+        log_error("[bmp] %s: %s", path, strerror(errno));
         return -1;
     }
 
     if (fread(hdr, 1, sizeof(hdr), fp) != sizeof(hdr)) {
-        fprintf(stderr, "[bmp] %s: file too short\n", path);
+        log_error("[bmp] %s: file too short", path);
         fclose(fp);
         return -1;
     }
     if (hdr[0] != 'B' || hdr[1] != 'M') {
-        fprintf(stderr, "[bmp] %s: not a BMP file\n", path);
+        log_error("[bmp] %s: not a BMP file", path);
         fclose(fp);
         return -1;
     }
@@ -56,17 +58,17 @@ int bmp_load(const char *path, bmp_image_t *img)
     compression = le32(hdr + 30);
 
     if (compression != 0) {
-        fprintf(stderr, "[bmp] %s: compressed BMP not supported\n", path);
+        log_error("[bmp] %s: compressed BMP not supported", path);
         fclose(fp);
         return -1;
     }
     if (width <= 0 || height == 0 || width > 4096 || height > 4096 || height < -4096) {
-        fprintf(stderr, "[bmp] %s: bad size %dx%d\n", path, width, height);
+        log_error("[bmp] %s: bad size %dx%d", path, width, height);
         fclose(fp);
         return -1;
     }
     if (bpp != 24 && bpp != 32) {
-        fprintf(stderr, "[bmp] %s: %d bpp not supported (need 24 or 32)\n", path, bpp);
+        log_error("[bmp] %s: %d bpp not supported (need 24 or 32)", path, bpp);
         fclose(fp);
         return -1;
     }
@@ -79,7 +81,7 @@ int bmp_load(const char *path, bmp_image_t *img)
     pixels = (uint32_t *)malloc((size_t)width * (size_t)abs_h * sizeof(uint32_t));
     line = (unsigned char *)malloc(row_bytes);
     if (pixels == NULL || line == NULL) {
-        fprintf(stderr, "[bmp] %s: out of memory\n", path);
+        log_error("[bmp] %s: out of memory", path);
         free(pixels);
         free(line);
         fclose(fp);
@@ -87,7 +89,7 @@ int bmp_load(const char *path, bmp_image_t *img)
     }
 
     if (fseek(fp, (long)off, SEEK_SET) != 0) {
-        fprintf(stderr, "[bmp] %s: seek failed\n", path);
+        log_error("[bmp] %s: seek failed", path);
         free(pixels);
         free(line);
         fclose(fp);
@@ -99,7 +101,7 @@ int bmp_load(const char *path, bmp_image_t *img)
         uint32_t *dst;
 
         if (fread(line, 1, row_bytes, fp) != row_bytes) {
-            fprintf(stderr, "[bmp] %s: truncated pixel data\n", path);
+            log_error("[bmp] %s: truncated pixel data", path);
             free(pixels);
             free(line);
             fclose(fp);

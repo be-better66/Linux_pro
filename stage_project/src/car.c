@@ -5,6 +5,7 @@
 #include "text.h"
 #include "touch.h"
 #include "car_photo.h"
+#include "log.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +40,7 @@ int car_load_image(const char *path, bmp_image_t *img, int *have)
         return -1;
     }
     *have = 1;
-    printf("[car] 图片加载: %s (%dx%d)\n", path, img->width, img->height);
+    log_info("[car] 图片加载: %s (%dx%d)", path, img->width, img->height);
     return 0;
 }
 
@@ -227,8 +228,8 @@ static int moved_less_than(const touch_event_t *ev, int limit)
 static void handle_touch(const touch_event_t *ev)
 {
 #if CAR_TOUCH_DEBUG
-    printf("[touch] type=%d x=%d y=%d start=(%d,%d)\n",
-           (int)ev->type, ev->x, ev->y, ev->start_x, ev->start_y);
+    log_debug("[touch] type=%d x=%d y=%d start=(%d,%d)",
+              (int)ev->type, ev->x, ev->y, ev->start_x, ev->start_y);
 #endif
 
     /* 返回键按“按下点”判断，手指轻微抖动也认 */
@@ -331,12 +332,12 @@ int car_run(void)
         return 1;
 
     if (car_config_load("res/car/car.cfg", &g_car.cfg) < 0)
-        printf("[car] 未找到 res/car/car.cfg，使用默认配置\n");
+        log_warn("[car] 未找到 res/car/car.cfg，使用默认配置");
 
-    printf("[car] 车型配置: %d 首歌, 主题=%s, 音量=%d\n",
-           g_car.cfg.song_count,
-           g_car.cfg.night ? "夜间" : "白天",
-           g_car.cfg.volume);
+    log_info("[car] 车型配置: %d 首歌, 主题=%s, 音量=%d",
+             g_car.cfg.song_count,
+             g_car.cfg.night ? "夜间" : "白天",
+             g_car.cfg.volume);
 
     g_car.page = CAR_PAGE_HOME;
     g_car.speed = 0;
@@ -353,11 +354,11 @@ int car_run(void)
     g_car.phone_calling = 0;
 
     if (text_init(g_car.cfg.font) < 0)
-        printf("[car] 字库加载失败，文字将被跳过\n");
+        log_warn("[car] 字库加载失败，文字将被跳过");
 
     touch_ok = (touch_init() == 0);
     if (!touch_ok)
-        printf("[car] 触摸屏打开失败，仅自动演示\n");
+        log_warn("[car] 触摸屏打开失败，仅自动演示");
 
     car_load_all_images();
 
@@ -366,7 +367,7 @@ int car_run(void)
     g_car.dash_cache = (uint32_t *)malloc((size_t)LCD_WIDTH * LCD_HEIGHT * sizeof(uint32_t));
 
     if (g_car.prev == NULL || g_car.next == NULL || g_car.dash_cache == NULL)
-        printf("[car] 内存不足，页面切换动画/仪表缓存将被禁用\n");
+        log_error("[car] 内存不足，页面切换动画/仪表缓存将被禁用");
 
     atexit(car_music_stop);
 
